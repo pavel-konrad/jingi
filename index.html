@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>document.documentElement.classList.add("js");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JINGI — a dice duel for two in a neon arena</title>
-<meta name="description" content="JINGI is a first-person dice duel for two. Throw the die into the arena, place it on your board, destroy your opponent's dice. Three modes, online play.">
+<title>JINGI: throw the die into the bass</title>
+<meta name="description" content="JINGI is a dice duel for two. You pick the die up, throw it into the cone of a bass speaker and place it on your board. Three modes, online play.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="JINGI — a dice duel for two in a neon arena">
-<meta property="og:description" content="Throw. Place. Destroy. A first-person dice duel with three modes and online play.">
+<meta property="og:title" content="JINGI: throw the die into the bass">
+<meta property="og:description" content="A dice duel for two. The table is a speaker, and you throw the die yourself.">
 <meta property="og:image" content="https://pavelkonrad.cz/jingi/img/share.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -16,252 +17,212 @@
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;600&family=Unbounded:wght@700;900&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --ink: #0d0b10;
-    --panel: #171717;
-    --inset: #2a2927;
-    --text: #f0ece6;
-    --dim: #a59f9a;
-    --accent: #d4874f;
-    --neon: #b44cff;
-    --line: rgba(212, 135, 79, .35);
+<link href="https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
   }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0;
-    background: var(--ink);
-    color: var(--text);
-    font-family: "Kode Mono", ui-monospace, Menlo, monospace;
-    font-size: 17px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: var(--accent); }
-  img { max-width: 100%; display: block; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
-
-  /* Hero: the arena itself, with the wordmark over its dark lower third. */
-  .hero {
-    position: relative;
-    min-height: min(92vh, 900px);
-    display: flex;
-    align-items: flex-end;
-    background: #000 url("img/arena.jpg") center / cover no-repeat;
-  }
-  .hero::after {
-    content: "";
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(13,11,16,.25) 0%, rgba(13,11,16,.1) 35%, rgba(13,11,16,.86) 78%, var(--ink) 100%);
-  }
-  .hero .wrap { position: relative; z-index: 1; width: 100%; padding-bottom: 64px; }
-  .wordmark { width: min(620px, 78vw); margin-bottom: 18px; }
-  .tagline {
-    font-size: clamp(19px, 2.6vw, 28px);
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 10px;
-  }
-  .lede { max-width: 640px; margin: 0 0 30px; color: var(--text); font-size: 18px; }
-
-  .cta { display: flex; flex-wrap: wrap; gap: 14px; }
-  .btn {
-    display: inline-block;
-    padding: 14px 26px;
-    border: 1px solid var(--accent);
-    border-radius: 4px;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    text-decoration: none;
-    font-size: 15px;
-    transition: background .15s, color .15s;
-  }
-  .btn.primary { background: var(--accent); color: #23160d; font-weight: 600; }
-  .btn.primary:hover { background: #e39a62; }
-  .btn.ghost { color: var(--text); border-color: var(--line); }
-  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.soon { cursor: default; }
-  .note { margin: 14px 0 0; color: var(--dim); font-size: 14px; letter-spacing: .06em; }
-
-  section { padding: 84px 0; }
-  h2 {
-    font-family: "Unbounded", "Kode Mono", sans-serif;
-    font-weight: 900;
-    font-size: clamp(26px, 4vw, 40px);
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    margin: 0 0 12px;
-  }
-  .kicker { color: var(--accent); letter-spacing: .3em; text-transform: uppercase; font-size: 13px; margin: 0 0 10px; }
-  .sub { color: var(--dim); max-width: 700px; margin: 0 0 40px; }
-
-  /* Three beats of a turn, drawn like the game's HUD panels. */
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .card {
-    background: var(--panel);
-    border-radius: 14px;
-    padding: 26px 24px 24px;
-    border: 1px solid #221f24;
-  }
-  .card .num { color: var(--accent); letter-spacing: .3em; font-size: 13px; }
-  .card h3 {
-    font-family: "Unbounded", sans-serif; font-weight: 700;
-    font-size: 21px; letter-spacing: .06em; text-transform: uppercase;
-    margin: 8px 0 10px;
-  }
-  .card p { margin: 0; color: #cfc9c3; font-size: 16px; }
-
-  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .mode { background: var(--inset); border-radius: 12px; padding: 22px; }
-  .mode h3 { margin: 0 0 6px; font-size: 17px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
-  .mode p { margin: 0; font-size: 16px; color: #d8d2cc; }
-
-  .split { display: grid; grid-template-columns: 1.1fr 1fr; gap: 44px; align-items: center; }
-  .split img { border-radius: 12px; border: 1px solid #221f24; }
-  ul.plain { list-style: none; padding: 0; margin: 0; }
-  ul.plain li { padding: 10px 0 10px 26px; position: relative; border-bottom: 1px solid #1f1c22; }
-  ul.plain li::before { content: ""; position: absolute; left: 2px; top: 20px; width: 10px; height: 10px; border: 2px solid var(--accent); border-radius: 2px; }
-
-  .shots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .shots a { display: block; border-radius: 10px; overflow: hidden; border: 1px solid #221f24; }
-  .shots img { width: 100%; transition: transform .3s; }
-  .shots a:hover img { transform: scale(1.03); }
-  .shots .wide { grid-column: 1 / -1; }
-
-  .credits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 26px; }
-  .credit .role { color: var(--accent); letter-spacing: .26em; text-transform: uppercase; font-size: 12px; }
-  .credit .name { font-family: "Unbounded", sans-serif; font-weight: 700; font-size: 19px; text-transform: uppercase; letter-spacing: .03em; margin-top: 4px; }
-  .small { color: var(--dim); font-size: 14px; }
-
-  footer { border-top: 1px solid #1f1c22; padding: 34px 0 60px; color: var(--dim); font-size: 14px; }
-  footer .row { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
-
-  @media (max-width: 860px) {
-    .steps, .modes, .credits { grid-template-columns: 1fr; }
-    .split { grid-template-columns: 1fr; gap: 26px; }
-    .shots { grid-template-columns: 1fr; }
-    section { padding: 60px 0; }
-    .hero { min-height: 84vh; }
-  }
-</style>
+}
+</script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the game</a>
 
-<header class="hero">
-  <div class="wrap">
-    <img class="wordmark" src="img/wordmark.png" alt="JINGI" width="1014" height="191">
-    <p class="tagline">Throw. Place. Destroy.</p>
-    <p class="lede">A first-person dice duel for two. One die, two boards of nine cells, and an arena that kicks back. Easy to learn in a single match, mean enough to want another.</p>
-    <div class="cta">
-      <span class="btn primary soon" aria-disabled="true">Wishlist on Steam — soon</span>
-      <a class="btn ghost" href="#play">How it plays</a>
+<nav class="bar" aria-label="JINGI">
+  <a class="bar__mark" href="#top"><img src="img/wordmark.png" alt="JINGI" width="990" height="167"></a>
+  <a class="button button--small" href="mailto:audio@pavelkonrad.cz?subject=JINGI%20demo">Send me the demo</a>
+</nav>
+
+<header class="hero" id="top">
+  <video class="hero__film" autoplay muted loop playsinline preload="metadata" poster="img/poster.jpg" aria-hidden="true" tabindex="-1">
+    <source src="video/arena.webm" type="video/webm">
+    <source src="video/arena.mp4" type="video/mp4">
+  </video>
+  <div class="hero__shade" aria-hidden="true"></div>
+  <p class="hero__kanji" lang="ja" aria-hidden="true">仁義</p>
+
+  <div class="wrap hero__text">
+    <h1>Throw the die into the bass.</h1>
+    <p class="lede">JINGI is a dice duel for two. You pick the die up, pull it back and let go. It lands in the cone of a speaker, and the speaker throws it around before it settles.</p>
+    <div class="actions">
+      <a class="button" href="mailto:audio@pavelkonrad.cz?subject=JINGI%20demo">Send me the demo</a>
+      <a class="button button--quiet" href="#throw">Throw one here</a>
     </div>
-    <p class="note">PC &amp; Mac · solo against the computer or online against a friend</p>
+    <p class="facts">Against the computer, or online against a friend.</p>
   </div>
+
+  <button class="film-toggle" type="button" data-film-toggle aria-pressed="false">Pause film</button>
 </header>
 
-<main>
-  <section id="play">
-    <div class="wrap">
-      <p class="kicker">One turn, three beats</p>
-      <h2>How it plays</h2>
-      <p class="sub">You sit at the table. The die drops into your gripper. What happens next is in your hand.</p>
-      <div class="steps">
-        <div class="card">
-          <div class="num">01</div>
-          <h3>Throw</h3>
-          <p>Grab the die, pull it past the line and let go. It lands in the bowl of a bass speaker, bounces, and the cone throws it about before it settles.</p>
+<main id="main">
+
+  <!-- The one gesture the game is built on, with the game's own speaker and die. -->
+  <section class="table" id="throw" aria-labelledby="throw-title">
+    <div class="stage" data-arena data-state="held">
+      <img class="stage__poster" src="img/poster.jpg" alt="The speaker in the middle of the table, a die lying in its cone" width="1600" height="900">
+      <canvas aria-label="The arena's speaker with a die you can pick up and throw into it"></canvas>
+      <p class="stage__hint" aria-hidden="true">Drag the die, let go over the speaker</p>
+    </div>
+
+    <div class="wrap table__grid">
+      <div class="table__side">
+        <h2 id="throw-title">Pick it up.<br>Let go.</h2>
+        <p>This is the speaker from the middle of the table and the die from the game, not a picture of them. Grab the die and throw it. Count the bars on the face that ends up on top.</p>
+
+        <div class="hud" aria-live="polite">
+          <div class="hud__move">
+            <img src="img/word-move.png" alt="Move" width="616" height="98">
+            <p class="hud__line">info - <span data-hud-face>face -</span></p>
+            <p class="hud__small" data-hud-move>Move number: 0</p>
+          </div>
+          <p class="hud__info" data-hud-info>The die is in your hand. Throw it into the speaker.</p>
         </div>
-        <div class="card">
-          <div class="num">02</div>
-          <h3>Place</h3>
-          <p>Put it on your 3×3 board. Equal dice next to each other multiply — two fives are worth twenty, three are worth forty-five.</p>
-        </div>
-        <div class="card">
-          <div class="num">03</div>
-          <h3>Destroy</h3>
-          <p>Your die wipes out every die of the same value in your opponent's matching column. Build your score, or burn theirs.</p>
-        </div>
+
+        <button class="button button--wide" type="button" data-throw>Throw the die</button>
       </div>
     </div>
   </section>
 
-  <section style="padding-top:0">
+  <section class="turn" aria-labelledby="turn-title">
     <div class="wrap">
-      <p class="kicker">Three ways to play</p>
-      <h2>Modes</h2>
-      <p class="sub">Same die, same boards, a different game each time. The host of an online match picks the mode.</p>
-      <div class="modes">
-        <div class="mode">
+      <h2 id="turn-title">A turn takes three things.</h2>
+      <ol class="beats">
+        <li>
+          <span class="bars" data-bars="1" aria-hidden="true"><i></i></span>
+          <div>
+            <h3>Throw</h3>
+            <p>The die drops into your gripper. Take it, pull it past the line and release. It flies to the speaker in the middle of the table and the cone kicks it until it lies still.</p>
+          </div>
+        </li>
+        <li>
+          <span class="bars" data-bars="2" aria-hidden="true"><i></i><i></i></span>
+          <div>
+            <h3>Place</h3>
+            <p>Put it on your board of nine cells. Equal dice in a column multiply: a 4, a 1 and a 4 in one column are worth 17, because each 4 counts twice.</p>
+          </div>
+        </li>
+        <li>
+          <span class="bars" data-bars="3" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div>
+            <h3>Destroy</h3>
+            <p>Your die removes every die of the same value from the matching column of the other board. When one board is full, the higher score wins.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="modes" aria-labelledby="modes-title">
+    <div class="wrap">
+      <h2 id="modes-title">Three modes, one die.</h2>
+      <p class="section-lede">The lines that score change, and with them where you want the die. Online, the host picks the mode.</p>
+      <div class="modes__grid">
+        <article class="mode">
+          <svg viewBox="0 0 96 96" role="img" aria-label="Three columns score">
+            <g class="cells"><rect x="6" y="6" width="24" height="24"/><rect x="36" y="6" width="24" height="24"/><rect x="66" y="6" width="24" height="24"/><rect x="6" y="36" width="24" height="24"/><rect x="36" y="36" width="24" height="24"/><rect x="66" y="36" width="24" height="24"/><rect x="6" y="66" width="24" height="24"/><rect x="36" y="66" width="24" height="24"/><rect x="66" y="66" width="24" height="24"/></g>
+            <g class="lines"><path d="M18 10V86M48 10V86M78 10V86"/></g>
+          </svg>
           <h3>Basic</h3>
-          <p>Drop the die into a column. Equal dice in a column multiply. The classic duel.</p>
-        </div>
-        <div class="mode">
+          <p>The die goes into a column. Equal dice in a column multiply.</p>
+        </article>
+        <article class="mode">
+          <svg viewBox="0 0 96 96" role="img" aria-label="Columns, rows and both diagonals score">
+            <g class="cells"><rect x="6" y="6" width="24" height="24"/><rect x="36" y="6" width="24" height="24"/><rect x="66" y="6" width="24" height="24"/><rect x="6" y="36" width="24" height="24"/><rect x="36" y="36" width="24" height="24"/><rect x="66" y="36" width="24" height="24"/><rect x="6" y="66" width="24" height="24"/><rect x="36" y="66" width="24" height="24"/><rect x="66" y="66" width="24" height="24"/></g>
+            <g class="lines"><path d="M18 10V86M48 10V86M78 10V86M10 18H86M10 48H86M10 78H86M12 12L84 84M84 12L12 84"/></g>
+          </svg>
           <h3>FreeMode</h3>
-          <p>Any free cell is yours. Equal dice and straights score in rows, columns and full diagonals.</p>
-        </div>
-        <div class="mode">
+          <p>The die goes on any free cell. Equal dice and runs like 2, 3, 4 score in columns, rows and full diagonals.</p>
+        </article>
+        <article class="mode">
+          <svg viewBox="0 0 96 96" role="img" aria-label="Columns and rows score, diagonals do not">
+            <g class="cells"><rect x="6" y="6" width="24" height="24"/><rect x="36" y="6" width="24" height="24"/><rect x="66" y="6" width="24" height="24"/><rect x="6" y="36" width="24" height="24"/><rect x="36" y="36" width="24" height="24"/><rect x="66" y="36" width="24" height="24"/><rect x="6" y="66" width="24" height="24"/><rect x="36" y="66" width="24" height="24"/><rect x="66" y="66" width="24" height="24"/></g>
+            <g class="lines"><path d="M18 10V86M48 10V86M78 10V86M10 18H86M10 48H86M10 78H86"/></g>
+          </svg>
           <h3>Criss no Cross</h3>
-          <p>Columns again — but rows score too. Every die now pulls in two directions.</p>
-        </div>
+          <p>Into a column again, but rows score as well. Every die pulls in two directions.</p>
+        </article>
       </div>
+      <p class="again"><a class="button" href="mailto:audio@pavelkonrad.cz?subject=JINGI%20demo">Send me the demo</a></p>
     </div>
   </section>
 
-  <section style="padding-top:0">
-    <div class="wrap split">
+  <section class="across" aria-labelledby="across-title">
+    <div class="wrap across__grid">
       <div>
-        <p class="kicker">Across the table</p>
-        <h2>Play online</h2>
-        <p class="sub" style="margin-bottom:22px">Name your game, wait for a friend, press Play. They sit across from you — and you watch their hand take the die.</p>
-        <ul class="plain">
-          <li>Host a game and it shows up in everyone's list</li>
-          <li>No ports to open, no addresses to type</li>
-          <li>Ready up in the room, the host starts the match</li>
-          <li>A computer opponent for when nobody is around</li>
-        </ul>
+        <h2 id="across-title">Your friend sits across the table.</h2>
+        <p>Name your game and it appears in everyone's list. Your friend picks it and says when they are ready. You press Play.</p>
+        <p>From then on you watch their hand: the die waits in their gripper until they take it, you see where they hold it and the moment they let go.</p>
+        <p>When nobody is around, the computer takes the other seat. It plays the best move it can see, and now and then it slips.</p>
       </div>
-      <a href="img/lobby.jpg"><img src="img/lobby.jpg" alt="The room before an online match: the opponent is ready, press Play" loading="lazy" width="1400" height="787"></a>
+      <figure>
+        <img src="img/lobby.jpg" alt="The room before an online match: the game is called Friday Night, the opponent is ready, the host can press Play" loading="lazy" width="1400" height="787">
+        <figcaption>The room before a match. Menus stand in the arena like everything else.</figcaption>
+      </figure>
     </div>
   </section>
 
-  <section style="padding-top:0">
+  <section class="seen" aria-labelledby="seen-title">
     <div class="wrap">
-      <p class="kicker">From the arena</p>
-      <h2>Screenshots</h2>
-      <p class="sub">Everything you read is in the room with you: the score on the monitor, the menu on a panel, the result above the winner's board.</p>
-      <div class="shots">
-        <a class="wide" href="img/win.jpg"><img src="img/win.jpg" alt="The end of a match: WIN above the winner's board" loading="lazy" width="1400" height="787"></a>
-        <a href="img/menu.jpg"><img src="img/menu.jpg" alt="The main menu, a panel standing in the arena" loading="lazy" width="1400" height="787"></a>
-        <a href="img/arena.jpg"><img src="img/arena.jpg" alt="The table: two boards, two grippers and the speaker the die lands in" loading="lazy" width="1400" height="787"></a>
+      <h2 id="seen-title">Everything you read is in the room.</h2>
+      <p class="section-lede">The score is on a monitor on a robot arm. The menu is a panel. The result hangs over the winner's board.</p>
+      <div class="seen__grid">
+        <figure class="seen__wide">
+          <img src="img/win.jpg" alt="The end of a match: the word WIN, the winner's name and the score above the winner's board" loading="lazy" width="1400" height="787">
+        </figure>
+        <figure>
+          <img src="img/menu.jpg" alt="The main menu on a panel standing in the arena" loading="lazy" width="1400" height="787">
+        </figure>
+        <figure>
+          <img src="img/arena.jpg" alt="The table from a player's seat: two boards, the gripper with the die and the speaker in the middle" loading="lazy" width="1400" height="787">
+        </figure>
       </div>
     </div>
   </section>
 
-  <section style="padding-top:0">
+  <section class="who" aria-labelledby="who-title">
     <div class="wrap">
-      <p class="kicker">Who made it</p>
-      <h2>Credits</h2>
-      <p class="sub">Three people. One arena, made well.</p>
-      <div class="credits">
-        <div class="credit"><div class="role">Code &amp; Sounds</div><div class="name">Pavel Konrad</div></div>
-        <div class="credit"><div class="role">Graphics &amp; Design</div><div class="name">Nikolas Douglas Farington</div></div>
-        <div class="credit"><div class="role">Soundtrack</div><div class="name">Vilém Kalous</div></div>
-      </div>
-      <p class="small">Made with Unity. Audio: FMOD Studio by Firelight Technologies Pty Ltd. The rules grew out of Knucklebones.</p>
+      <h2 id="who-title">Three people made it.</h2>
+      <ul class="credits">
+        <li><span>Code and sounds</span><strong>Pavel Konrad</strong></li>
+        <li><span>Graphics and design</span><strong>Nikolas Douglas Farington</strong></li>
+        <li><span>Soundtrack</span><strong>Vilém Kalous</strong></li>
+      </ul>
+      <p class="name"><span lang="ja">仁義</span> is read jingi: honour and duty, the code a player keeps. The rules grew out of Knucklebones.</p>
+      <p class="engines">Made with Unity. Audio: FMOD Studio by Firelight Technologies Pty Ltd.</p>
+      <p class="again"><a class="button" href="mailto:audio@pavelkonrad.cz?subject=JINGI%20demo">Send me the demo</a></p>
     </div>
   </section>
 </main>
 
-<footer>
-  <div class="wrap row">
+<footer class="foot">
+  <div class="wrap foot__row">
     <span>© 2026 <a href="https://pavelkonrad.cz">pavelkonrad.cz</a></span>
-    <span>Press, playtests, anything else: <a href="mailto:audio@pavelkonrad.cz?subject=JINGI">audio@pavelkonrad.cz</a></span>
+    <span>Playtests, press, anything else: <a href="mailto:audio@pavelkonrad.cz?subject=JINGI">audio@pavelkonrad.cz</a></span>
   </div>
 </footer>
 
+<script type="module" src="js/arena.js"></script>
+<script>
+  // The film can be stopped, and does not start for someone who asked for less motion.
+  (function () {
+    var film = document.querySelector(".hero__film");
+    var toggle = document.querySelector("[data-film-toggle]");
+    if (!film || !toggle) return;
+    function show() {
+      var paused = film.paused;
+      toggle.textContent = paused ? "Play film" : "Pause film";
+      toggle.setAttribute("aria-pressed", paused ? "true" : "false");
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { film.removeAttribute("autoplay"); film.pause(); }
+    toggle.addEventListener("click", function () { if (film.paused) film.play(); else film.pause(); });
+    film.addEventListener("play", show);
+    film.addEventListener("pause", show);
+    show();
+  })();
+</script>
 </body>
 </html>
