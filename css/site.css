@@ -193,7 +193,7 @@ figcaption { margin-top: 0.75rem; color: var(--dim); font-size: var(--s-1); }
 .seen__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-top: 3rem; }
 .seen__wide { grid-column: 1 / -1; }
 
-.credits { list-style: none; margin: 3rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; }
+.credits { list-style: none; margin: 3rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 2rem; }
 .credits span { display: block; color: var(--near); font-size: var(--s-1); letter-spacing: 0.08em; text-transform: uppercase; }
 .credits strong { display: block; margin-top: 0.25rem; font-size: var(--s1); line-height: 1.2; font-weight: 700; }
 .name { margin-top: 3rem; }
